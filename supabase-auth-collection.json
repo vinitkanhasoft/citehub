@@ -1,0 +1,822 @@
+{
+  "info": {
+    "name": "🔐 Supabase Auth API",
+    "description": "Complete collection for Supabase authentication endpoints with proper error handling and security",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "factorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "challengeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🚀 Authentication Basics",
+      "item": [
+        {
+          "name": "📝 Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"yourSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            },
+            "description": "Register a new user account with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "🔑 Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"yourSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Sign in with email and password. Returns access and refresh tokens. Checks for 2FA requirement and setup state.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    if (response.session) {",
+                    "        pm.collectionVariables.set('accessToken', response.session.access_token);",
+                    "        pm.collectionVariables.set('refreshToken', response.session.refresh_token);",
+                    "        if (response.user && response.user.id) {",
+                    "            pm.collectionVariables.set('userId', response.user.id);",
+                    "        }",
+                    "        console.log('Tokens saved for subsequent requests');",
+                    "        console.log('2FA Required:', response.requires2FA);",
+                    "        console.log('Needs 2FA Setup:', response.needs2FASetup);",
+                    "    } else if (response.requires2FA && response.factorId) {",
+                    "        pm.collectionVariables.set('factorId', response.factorId);",
+                    "        console.log('2FA required. Factor ID saved.');",
+                    "    } else if (response.needs2FASetup && response.factorId) {",
+                    "        pm.collectionVariables.set('factorId', response.factorId);",
+                    "        console.log('2FA setup in progress. Factor ID saved.');",
+                    "        console.log('Setup expires in:', response.setupExpiresIn, 'minutes');",
+                    "    }",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ],
+            "response": []
+          }
+        },
+        {
+          "name": "🚪 Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signout"]
+            },
+            "description": "Sign out the current user (requires authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "👤 Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get current user profile information (requires authentication)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Basic authentication endpoints for user registration and login"
+    },
+    {
+      "name": "📧 Email Management",
+      "item": [
+        {
+          "name": "✉️ Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-email"]
+            },
+            "description": "Send email verification link to user"
+          },
+          "response": []
+        },
+        {
+          "name": "🔄 Resend Confirmation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/resend-confirmation",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "resend-confirmation"]
+            },
+            "description": "Resend email confirmation link"
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Send password reset email to user"
+          },
+          "response": []
+        },
+        {
+          "name": "📧 Change Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newEmail\": \"newemail@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-email"]
+            },
+            "description": "Request email change (requires authentication)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Email verification and password management endpoints"
+    },
+    {
+      "name": "🔄 Session Management",
+      "item": [
+        {
+          "name": "🎫 Get User Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"access_token\": \"{{accessToken}}\",\n  \"refresh_token\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "session"]
+            },
+            "description": "Get user session using access and refresh tokens"
+          },
+          "response": []
+        }
+      ],
+      "description": "Session management and token validation"
+    },
+    {
+      "name": "🔐 Two-Factor Authentication (2FA)",
+      "item": [
+        {
+          "name": "📊 2FA Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "status"]
+            },
+            "description": "Check if 2FA is enabled for the current user and list all active factors"
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ Setup 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "setup"]
+            },
+            "description": "Setup 2FA for user. Returns QR code, secret key, backup codes, and expiration time. Handles network recovery automatically.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    if (response.factorId) {",
+                    "        pm.collectionVariables.set('factorId', response.factorId);",
+                    "        console.log('Factor ID saved for 2FA verification');",
+                    "        console.log('QR Code:', response.qrCode ? 'Generated' : 'Missing');",
+                    "        console.log('Secret:', response.secret ? 'Available' : 'Missing');",
+                    "        console.log('Setup expires in:', response.setupExpiresIn, 'minutes');",
+                    "        console.log('Setup type:', response.message.includes('resumed') ? 'Resumed' : 'New');",
+                    "    }",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Verify 2FA Setup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"factorId\": \"{{factorId}}\",\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/verify-setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "verify-setup"]
+            },
+            "description": "Verify and complete 2FA setup using factor ID and 6-digit code from authenticator app. Sets requires_2fa = true in database.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    console.log('2FA Setup Status:', response.success ? 'Completed' : 'Failed');",
+                    "    console.log('Requires 2FA:', response.requires2FA);",
+                    "    console.log('Verified at:', response.verifiedAt);",
+                    "    if (response.success) {",
+                    "        console.log('✅ 2FA setup completed successfully!');",
+                    "    }",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "🎯 2FA Challenge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"factorId\": \"{{factorId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/challenge",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "challenge"]
+            },
+            "description": "Create a 2FA challenge for login verification"
+          },
+          "response": []
+        },
+        {
+          "name": "🔓 Verify 2FA Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"factorId\": \"{{factorId}}\",\n  \"challengeId\": \"{{challengeId}}\",\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "verify"]
+            },
+            "description": "Verify 2FA code during login process using factor ID, challenge ID, and 6-digit code. Returns full session on success.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    if (response.success && response.accessToken) {",
+                    "        pm.collectionVariables.set('accessToken', response.accessToken);",
+                    "        if (response.refreshToken) {",
+                    "            pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                    "        }",
+                    "        console.log('✅ 2FA verification successful! Full session obtained.');",
+                    "        console.log('Verified at:', response.verifiedAt);",
+                    "    }",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "� Disable 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"factorId\": \"{{factorId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/disable",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "disable"]
+            },
+            "description": "Disable 2FA for user using factor ID. Sets requires_2fa = false in database and cleans up all factors.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    console.log('2FA Disable Status:', response.success ? 'Disabled' : 'Failed');",
+                    "    console.log('Requires 2FA:', response.requires2FA);",
+                    "    console.log('Unenrolled at:', response.unenrolledAt);",
+                    "    if (response.success) {",
+                    "        console.log('✅ 2FA disabled successfully!');",
+                    "    }",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        }
+      ],
+      "description": "Complete two-factor authentication (2FA) setup, verification, and management using Supabase MFA"
+    },
+    {
+      "name": "🛡️ 2FA Recovery & Admin",
+      "item": [
+        {
+          "name": "🔄 Resume 2FA Setup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/resume-setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "resume-setup"]
+            },
+            "description": "Resume interrupted 2FA setup after network loss or page refresh. Returns existing QR code if within 15-minute window.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    if (response.factorId) {",
+                    "        pm.collectionVariables.set('factorId', response.factorId);",
+                    "        console.log('✅ 2FA setup resumed successfully!');",
+                    "        console.log('Setup expires in:', response.setupExpiresIn, 'minutes');",
+                    "        console.log('QR Code:', response.qrCode ? 'Available' : 'Missing');",
+                    "    }",
+                    "} else if (pm.response.code >= 400) {",
+                    "    const response = pm.response.json();",
+                    "    console.log('❌ Resume failed:', response.message);",
+                    "    console.log('Suggestion: Start new setup if expired');",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "🛑 Abort 2FA Setup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/abort-setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "abort-setup"]
+            },
+            "description": "Cleanly abort 2FA setup process. Removes unverified factors and clears setup state in database.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    console.log('✅ 2FA setup aborted successfully!');",
+                    "    console.log('Factors cleaned:', response.cleaned);",
+                    "    console.log('Setup state cleared in database');",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "🧹 Cleanup Unverified Factors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/cleanup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "cleanup"]
+            },
+            "description": "Clean up all unverified 2FA factors for the current user. Useful for clearing stuck setups.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    console.log('✅ Cleanup completed!');",
+                    "    console.log('Factors cleaned:', response.cleaned);",
+                    "    console.log('Message:', response.message);",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "🔧 Admin: Cleanup All 2FA Factors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/admin/cleanup-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "2fa", "admin", "cleanup-all"]
+            },
+            "description": "Admin endpoint to clean up all expired 2FA setups system-wide. Requires admin permissions.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    console.log('✅ Admin cleanup completed!');",
+                    "    console.log('Total checked:', response.totalChecked);",
+                    "    console.log('Total cleaned:', response.totalCleaned);",
+                    "    console.log('Results:', response.results);",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ Admin: Set User 2FA Requirement",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"required\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/users/{{userId}}/2fa-required",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "users", "{{userId}}", "2fa-required"]
+            },
+            "description": "Admin endpoint to set 2FA requirement for a specific user. Requires admin permissions.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    console.log('✅ User 2FA requirement updated!');",
+                    "    console.log('User ID:', response.userId);",
+                    "    console.log('Requires 2FA:', response.requires2FA);",
+                    "    console.log('Message:', response.message);",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          },
+          "response": []
+        }
+      ],
+      "description": "2FA recovery, cleanup, and administrative endpoints for managing 2FA state"
+    },
+    {
+      "name": "🌐 Social Authentication",
+      "item": [
+        {
+          "name": "🔄 Sync Social User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/sync-social",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "sync-social"]
+            },
+            "description": "Sync social authentication user to database. Creates user profile if first time login"
+          },
+          "response": []
+        }
+      ],
+      "description": "Social authentication integration endpoints"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Log request details for debugging",
+          "console.log('Request URL:', pm.request.url.toString());",
+          "console.log('Request Method:', pm.request.method);",
+          "console.log('Current Access Token:', pm.collectionVariables.get('accessToken') ? 'Set' : 'Not Set');"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Log response details",
+          "console.log('Response Status:', pm.response.code);",
+          "console.log('Response Time:', pm.response.responseTime);",
+          "",
+          "// Common tests for all requests",
+          "pm.test('Status code is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON', function () {",
+          "    if (pm.response.code !== 204) {",
+          "        pm.response.to.have.jsonBody();",
+          "    }",
+          "});",
+          "",
+          "// Log response body for debugging",
+          "if (pm.response.code !== 204) {",
+          "    console.log('Response Body:', pm.response.json());",
+          "}"
+        ]
+      }
+    }
+  ]
+}
